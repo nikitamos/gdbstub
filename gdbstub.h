@@ -1550,54 +1550,50 @@ static void gdb_x86_interrupt(struct gdb_interrupt_state *istate)
  * Write to I/O port.
  */
  static void gdb_x86_io_write_8(uint16_t port, uint8_t val);
- #pragma aux gdb_x86_io_write_8 = \
- "out  dx, al"                    \
- parm [al] [dx];
-// {
-//     asm volatile (
-//         "outb    %%al, %%dx;"
-//         /* Outputs  */ : /* None */
-//         /* Inputs   */ : "a" (val), "d" (port)
-//         /* Clobbers */ : /* None */
-//         );
-// }
+ //clang-format off
+#pragma aux gdb_x86_io_write_8 = "out  dx, al" parm[dx][al];
+ // {
+ //     asm volatile (
+ //         "outb    %%al, %%dx;"
+ //         /* Outputs  */ : /* None */
+ //         /* Inputs   */ : "a" (val), "d" (port)
+ //         /* Clobbers */ : /* None */
+ //         );
+ // }
+ /*
+  * Read from I/O port.
+  */
 
-/*
- * Read from I/O port.
- */
+ static uint8_t gdb_x86_io_read_8(uint16_t port);
+#pragma aux gdb_x86_io_read_8 = "in al, dx" parm[dx] value[al];
+ // {
+ //     uint8_t val;
 
-static uint8_t gdb_x86_io_read_8(uint16_t port);
-#pragma aux gdb_x86_io_read_8 = \
-"in al, dx"                     \
-parm  [dx]                      \
-value [al];
-// {
-//     uint8_t val;
+ //     asm volatile (
+ //         "inb     %%dx, %%al;"
+ //         /* Outputs  */ : "=a" (val)
+ //         /* Inputs   */ : "d" (port)
+ //         /* Clobbers */ : /* None */
+ //         );
 
-//     asm volatile (
-//         "inb     %%dx, %%al;"
-//         /* Outputs  */ : "=a" (val)
-//         /* Inputs   */ : "d" (port)
-//         /* Clobbers */ : /* None */
-//         );
+ //     return val;
+ // }
 
-//     return val;
-// }
-
-/*****************************************************************************
- * NS16550 Serial Port (IO)
- ****************************************************************************/
+ /*****************************************************************************
+  * NS16550 Serial Port (IO)
+  ****************************************************************************/
 
 #define SERIAL_THR 0
 #define SERIAL_RBR 0
 #define SERIAL_LSR 5
 
-static int gdb_x86_serial_getc(void)
-{
-    /* Wait for data */
-    while ((gdb_x86_io_read_8(SERIAL_PORT + SERIAL_LSR) & 1) == 0);
-    return gdb_x86_io_read_8(SERIAL_PORT + SERIAL_RBR);
-}
+ static int gdb_x86_serial_getc(void)
+ {
+     /* Wait for data */
+     while ((gdb_x86_io_read_8(SERIAL_PORT + SERIAL_LSR) & 1) == 0)
+         ;
+     return gdb_x86_io_read_8(SERIAL_PORT + SERIAL_RBR);
+ }
 
 static int gdb_x86_serial_putchar(int ch)
 {
@@ -1674,7 +1670,6 @@ inline void __int3(void);
  */
 void gdb_sys_init(void)
 {
-    gdb_x86_serial_putchar('U');
     /* Hook current IDT. */
     /* gdb_x86_hook_idt(1, gdb_x86_int_handlers[1]); */
     gdb_x86_hook_idt(3, gdb_x86_int_handlers[3]);

@@ -1,6 +1,6 @@
 ; DBRT --- debugger runtime
-entry:	jmp	main
 BITS 16
+entry:	jmp	_init_dbrt0
 
 ; cSpell:disable
 excnCnt	equ	24
@@ -11,9 +11,16 @@ extern	_Main
 ; provided by gdbstub.h
 extern	_gdb_sys_init
 
-section	.text.main
-global	main
-main:
+section	code
+global	_init_dbrt0
+_init_dbrt0:
+	; Dirty hack to fix linker's inability to relocate data reads
+	mov	ax, ds
+	mov	bx, 0x0010
+	add	ax, bx
+	; jc	segment_overflow ; TODO
+	mov	ds, ax
+
 	; We assume cs=ds=es=ss at the startup
 	; Save existing IVT
 	push	ds
@@ -55,8 +62,16 @@ main:
 	rep movsd
 
 	pop	es
+	mov	ax, cs
+	mov	ds, ax
 	ret
 
+; The caller pushes 16-bit handler address and 32-bit interrupt number on the stack.
+; Note that an interrupt number must be a 8-bit integer, so we can ignore its higher bytes.
+; [esp+8]	caller's stack frame
+; [esp+6]	handler asddress	2 bytes
+; [esp+2]	interrupt no.	4 byte
+; [esp]	return address	2 bytes
 global _gdb_x86_hook_idt
 _gdb_x86_hook_idt:
 	push	ebp
@@ -69,19 +84,20 @@ _gdb_x86_hook_idt:
 	; Set EBX to <DS|handlerAddress> as required for an IVT entry
 	mov	ax, ds
 	shl	eax, 0x10
-	or	eax, [ebp+4+8];
+	or	ax, [ebp+4+6];
 
 	; Write IVT entry
-	mov	edi, [ebp+4+4]
+	mov	edi, [ebp+4+2]
 	shl	di, 2	; for some reason [es:di*4] fails to assemble
 	mov	[es:di], eax
 
 	; Restore ES value
 	pop	es
 
-	push	'H'
-	call	putDebugChar16
-	pop	ax
+	; push	word 'H'
+	; call	putDebugChar16
+	; add	sp, 2
+
 	xor	ax, ax
 	pop	ebp
 	ret
@@ -94,7 +110,7 @@ putDebugChar16:
 	int	0x14
 	ret
 
-section .data
+section data
 oldIVT	times excnCnt dd 0
 
 global _small_code_
