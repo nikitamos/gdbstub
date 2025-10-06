@@ -20,11 +20,11 @@
 # SOFTWARE.
 #
 
-ARCH ?= mock
+ARCH ?= i386
 
-CFLAGS       = -Werror -ansi -g
+CFLAGS       = -0 -ecc -os -dGDBSTUB_ARCH_X86 -d__STRICT_ANSI__
 OBJCOPY      = objcopy
-BASE_ADDRESS = 0x500000
+BASE_ADDRESS = 0x100
 TARGET       = gdbstub.bin
 OBJECTS      = gdbstub.o
 INCLUDE_DEMO ?= 0
@@ -62,23 +62,23 @@ GENERATED += $(TARGET) $(OBJECTS)
 all: $(TARGET)
 
 gdbstub: $(OBJECTS)
-	$(CC) -o $@ $^
+	wcc name $@ file $^
 
 %.bin: %.elf
 	$(OBJCOPY) --output-target=binary $^ $@
 
 .PRECIOUS: %.elf
-%.elf: $(OBJECTS) gdbstub.ld
-	$(LD) --script=gdbstub.ld $(LDFLAGS) -o $@ $(OBJECTS)
+%.elf: $(OBJECTS)
+	wlink $(LDFLAGS) name $@ files $(OBJECTS)
 
-gdbstub.ld: gdbstub.ld.in Makefile
-	$(CC) -o $@ -x c -P -E \
-		-DBASE_ADDRESS=$(BASE_ADDRESS) \
-		-DINCLUDE_DEMO=$(INCLUDE_DEMO) \
-		$<
+# gdbstub.ld: gdbstub.ld.in Makefile
+# 	$(CC) -o $@ -x c -P -E \
+# 		-DBASE_ADDRESS=$(BASE_ADDRESS) \
+# 		-DINCLUDE_DEMO=$(INCLUDE_DEMO) \
+# 		$<
 
 %.o: %.c
-	$(CC) $(CFLAGS) -o $@ -c $<
+	wcc $(CFLAGS) name $@ file $<
 
 %.o: %.nasm
 	nasm -o $@ -felf $<
