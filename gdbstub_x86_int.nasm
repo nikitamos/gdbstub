@@ -25,12 +25,12 @@ bits 16
 %define NUM_HANDLERS 32
 
 section .data
-global gdb_x86_int_handlers
+global _gdb_x86_int_handlers
 
 ; Generate table of handlers
-gdb_x86_int_handlers:
+_gdb_x86_int_handlers:
 %macro handler_addr 1
-	dd gdb_x86_int_handler_%1
+	dw gdb_x86_int_handler_%1
 %endmacro
 %assign i 0
 %rep NUM_HANDLERS
@@ -39,7 +39,7 @@ gdb_x86_int_handlers:
 %endrep
 
 section .text
-extern gdb_x86_int_handler
+extern _gdb_x86_int_handler
 
 %macro int 1
 gdb_x86_int_handler_%1:
@@ -70,7 +70,7 @@ gdb_x86_int_handler_%1:
 
 ; Common Interrupt Handler
 gdb_x86_int_handler_common:
-	o32 pushad
+	pushad
 	push    ds
 	push    es
 	push    fs
@@ -99,7 +99,7 @@ gdb_x86_int_handler_common:
 	; - SS
 
 	push    ebp
-	call    gdb_x86_int_handler
+	call    _gdb_x86_int_handler
 
 	mov     esp, ebp
 	pop     ss
@@ -107,6 +107,6 @@ gdb_x86_int_handler_common:
 	pop     fs
 	pop     es
 	pop     ds
-	o32 popad
+	popad
 	add     esp, 8 ; Pop error & vector
 	iret

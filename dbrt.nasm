@@ -1,5 +1,5 @@
 ; DBRT --- debugger runtime
-
+entry:	jmp	main
 BITS 16
 
 ; cSpell:disable
@@ -9,19 +9,16 @@ excnCnt	equ	24
 extern	_Main
 
 ; provided by gdbstub.h
-extern	gdb_sys_init
+extern	_gdb_sys_init
 
-section	.text._start
-global	_start
-_start:
+section	.text.main
+global	main
+main:
 	; We assume cs=ds=es=ss at the startup
 	; Save existing IVT
 	push	ds
 	xor	ax, ax
 	mov	ds, ax
-
-	pushad
-	o32 pushad
 	
 	mov	cx, excnCnt
 	mov	di, oldIVT
@@ -41,7 +38,7 @@ _start:
 	int	0x14
 
 	; Setup debugger
-	call	dword gdb_sys_init
+	call	_gdb_sys_init
 	int3
 
 	; Main must preserve ds and es
@@ -60,8 +57,8 @@ _start:
 	pop	es
 	ret
 
-global gdb_x86_hook_idt
-gdb_x86_hook_idt:
+global _gdb_x86_hook_idt
+_gdb_x86_hook_idt:
 	push	ebp
 	mov	ebp, esp
 
@@ -87,15 +84,21 @@ gdb_x86_hook_idt:
 	pop	ax
 	xor	ax, ax
 	pop	ebp
-	o32 ret
+	ret
 
 putDebugChar16:
 	nop
-	; mov	eax, [esp+2]	
-	; mov	ah, 0x00
-	; xor	dx, dx
-	; int	0x14
+	mov	eax, [esp+2]	
+	mov	ah, 0x01
+	xor	dx, dx
+	int	0x14
 	ret
 
 section .data
 oldIVT	times excnCnt dd 0
+
+global _small_code_
+_small_code_	db	1
+
+; segment stack class=stack
+; 	resb 2048

@@ -54,17 +54,17 @@ void simple_loop(void)
 }
 #endif /* INCLUDE_DEMO */
 
-#ifndef DOSSTUB
-__attribute__((section(".text._start")))
-void _start(void)
-{
-	/* Enable debugging hooks and break */
-	gdb_sys_init();
+// #ifndef DOSSTUB
+// __attribute__((section(".text._start")))
+// void _start(void)
+// {
+// 	/* Enable debugging hooks and break */
+// 	gdb_sys_init();
 
-#ifdef INCLUDE_DEMO
-	/* Example code to debug through... */
-	simple_loop();
-#endif
-}
-#endif /* DOSSTUB */
+// #ifdef INCLUDE_DEMO
+// 	/* Example code to debug through... */
+// 	simple_loop();
+// #endif
+// }
+// #endif /* DOSSTUB */
 #endif /* GDBSTUB_ARCH_MOCK */

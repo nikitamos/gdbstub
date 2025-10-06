@@ -1385,22 +1385,22 @@ static struct gdb_state gdb_state;
 /*
  * Get current code segment (CS register).
  */
-static uint32_t gdb_x86_get_cs(void)
-{
-    uint32_t cs;
+// static uint32_t gdb_x86_get_cs(void)
+// {
+//     uint32_t cs;
 
-    /* clang-format off */
-    asm volatile (
-        "pushl   %%cs;"
-        "pop     %%eax;"
-        /* Outputs  */ : "=a" (cs)
-        /* Inputs   */ : /* None */
-        /* Clobbers */ : /* None */
-        );
-    /* clang-format on */
+//     /* clang-format off */
+//     asm volatile (
+//         "pushl   %%cs;"
+//         "pop     %%eax;"
+//         /* Outputs  */ : "=a" (cs)
+//         /* Inputs   */ : /* None */
+//         /* Clobbers */ : /* None */
+//         );
+//     /* clang-format on */
 
-    return cs;
-}
+//     return cs;
+// }
 
 /*****************************************************************************
  * Interrupt Management Functions
@@ -1549,32 +1549,40 @@ static void gdb_x86_interrupt(struct gdb_interrupt_state *istate)
 /*
  * Write to I/O port.
  */
-static void gdb_x86_io_write_8(uint16_t port, uint8_t val)
-{
-    asm volatile (
-        "outb    %%al, %%dx;"
-        /* Outputs  */ : /* None */
-        /* Inputs   */ : "a" (val), "d" (port)
-        /* Clobbers */ : /* None */
-        );
-}
+ static void gdb_x86_io_write_8(uint16_t port, uint8_t val);
+ #pragma aux gdb_x86_io_write_8 = \
+ "out  dx, al"                    \
+ parm [al] [dx];
+// {
+//     asm volatile (
+//         "outb    %%al, %%dx;"
+//         /* Outputs  */ : /* None */
+//         /* Inputs   */ : "a" (val), "d" (port)
+//         /* Clobbers */ : /* None */
+//         );
+// }
 
 /*
  * Read from I/O port.
  */
-static uint8_t gdb_x86_io_read_8(uint16_t port)
-{
-    uint8_t val;
 
-    asm volatile (
-        "inb     %%dx, %%al;"
-        /* Outputs  */ : "=a" (val)
-        /* Inputs   */ : "d" (port)
-        /* Clobbers */ : /* None */
-        );
+static uint8_t gdb_x86_io_read_8(uint16_t port);
+#pragma aux gdb_x86_io_read_8 = \
+"in al, dx"                     \
+parm  [dx]                      \
+value [al];
+// {
+//     uint8_t val;
 
-    return val;
-}
+//     asm volatile (
+//         "inb     %%dx, %%al;"
+//         /* Outputs  */ : "=a" (val)
+//         /* Inputs   */ : "d" (port)
+//         /* Clobbers */ : /* None */
+//         );
+
+//     return val;
+// }
 
 /*****************************************************************************
  * NS16550 Serial Port (IO)
@@ -1655,6 +1663,10 @@ int gdb_sys_step(struct gdb_state *state)
     return 0;
 }
 
+inline void __int3(void);
+#pragma aux __int3 = \
+"int 3";
+
 /*
  * Debugger init function.
  *
@@ -1668,7 +1680,7 @@ void gdb_sys_init(void)
     gdb_x86_hook_idt(3, gdb_x86_int_handlers[3]);
 
     /* Interrupt to start debugging. */
-    asm volatile ("int3");
+    __int3();
 }
 
 #endif /* GDBSTUB_ARCH_X86 */

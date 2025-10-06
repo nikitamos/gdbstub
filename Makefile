@@ -20,12 +20,12 @@
 # SOFTWARE.
 #
 
-ARCH ?= i386
+ARCH ?= dos16
 
-CFLAGS       = -0 -ecc -os -dGDBSTUB_ARCH_X86 -d__STRICT_ANSI__
+CFLAGS       = -0 -s -ecc -os -ms -dGDBSTUB_ARCH_X86 -dDOSSTUB
 OBJCOPY      = objcopy
 BASE_ADDRESS = 0x100
-TARGET       = gdbstub.bin
+TARGET       = gdbstub.com
 OBJECTS      = gdbstub.o
 INCLUDE_DEMO ?= 0
 
@@ -36,15 +36,17 @@ INCLUDE_DEMO = 0
 else ifeq ($(ARCH),dos16)
 OBJECTS += dbrt.o gdbstub_x86_int.o
 BASE_ADDRESS = 0x100
-CFLAGS += -O0 -fno-pie -fno-pic           \
-		  -fno-stack-protector            \
-		  -ffreestanding                  \
-		  -fno-asynchronous-unwind-tables \
-		  -m16 -march=i386                \
-		  -DGDBSTUB_ARCH_X86              \
-		  -DINCLUDE_DEMO=$(INCLUDE_DEMO)  \
-		  -DDOSSTUB
-LDFLAGS += -m elf_i386
+# CFLAGS += -O0 -fno-pie -fno-pic           \
+# 		  -fno-stack-protector            \
+# 		  -ffreestanding                  \
+# 		  -fno-asynchronous-unwind-tables \
+# 		  -m16 -march=i386                \
+# 		  -DGDBSTUB_ARCH_X86              \
+# 		  -DINCLUDE_DEMO=$(INCLUDE_DEMO)  \
+# 		  -DDOSSTUB
+CFLAGS   = -0 -s -ecc -os -dGDBSTUB_ARCH_X86 -dDOSSTUB
+LDFLAGS += format dos
+
 else
 GENERATED += gdbstub.elf gdbstub.ld
 ifeq ($(ARCH),x86)
@@ -57,19 +59,17 @@ $(error Please specify a supported architecture)
 endif
 endif
 
-GENERATED += $(TARGET) $(OBJECTS)
+GENERATED += $(main) $(OBJECTS)
 
 all: $(TARGET)
 
 gdbstub: $(OBJECTS)
-	wcc name $@ file $^
+	wcc $@ $^
 
-%.bin: %.elf
-	$(OBJCOPY) --output-target=binary $^ $@
-
-.PRECIOUS: %.elf
-%.elf: $(OBJECTS)
-	wlink $(LDFLAGS) name $@ files $(OBJECTS)
+.PRECIOUS: %.exe
+%.com: $(OBJECTS)
+# 	wlink $(LDFLAGS) $(OBJECTS) name $@
+	wlink format dos com name gdbstub.com file dbrt.o file gdbstub.o file gdbstub_x86_int.o
 
 # gdbstub.ld: gdbstub.ld.in Makefile
 # 	$(CC) -o $@ -x c -P -E \
@@ -78,10 +78,10 @@ gdbstub: $(OBJECTS)
 # 		$<
 
 %.o: %.c
-	wcc $(CFLAGS) name $@ file $<
+	wcc $(CFLAGS) $<
 
 %.o: %.nasm
-	nasm -o $@ -felf $<
+	nasm -o $@ -fobj $<
 
 .PHONY: clean
 clean:
