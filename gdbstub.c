@@ -54,6 +54,7 @@ void simple_loop(void)
 }
 #endif /* INCLUDE_DEMO */
 
+#ifndef DOSSTUB
 __attribute__((section(".text._start")))
 void _start(void)
 {
@@ -65,4 +66,5 @@ void _start(void)
 	simple_loop();
 #endif
 }
+#endif /* DOSSTUB */
 #endif /* GDBSTUB_ARCH_MOCK */

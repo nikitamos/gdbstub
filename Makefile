@@ -33,6 +33,18 @@ ifeq ($(ARCH),mock)
 CFLAGS += -DGDBSTUB_ARCH_MOCK
 TARGET = gdbstub
 INCLUDE_DEMO = 0
+else ifeq ($(ARCH),dos16)
+OBJECTS += dbrt.o gdbstub_x86_int.o
+BASE_ADDRESS = 0x100
+CFLAGS += -O0 -fno-pie -fno-pic           \
+		  -fno-stack-protector            \
+		  -ffreestanding                  \
+		  -fno-asynchronous-unwind-tables \
+		  -m16 -march=i386                \
+		  -DGDBSTUB_ARCH_X86              \
+		  -DINCLUDE_DEMO=$(INCLUDE_DEMO)  \
+		  -DDOSSTUB
+LDFLAGS += -m elf_i386
 else
 GENERATED += gdbstub.elf gdbstub.ld
 ifeq ($(ARCH),x86)

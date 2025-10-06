@@ -1,0 +1,27 @@
+gdbstub.h(917): Warning! W124: Comparison result always 0
+gdbstub.h(1380): Error! E1011: Symbol '__asm__' has not been declared
+gdbstub.h(1380): Error! E1009: Expecting ';' but found 'volatile'
+gdbstub.h(1380): Error! E1063: Missing operand
+gdbstub.h(1380): Warning! W111: Meaningless use of an expression
+gdbstub.h(1380): Error! E1009: Expecting ';' but found 'volatile'
+gdbstub.h(1380): Error! E1063: Missing operand
+gdbstub.h(1380): Warning! W111: Meaningless use of an expression
+gdbstub.h(1380): Error! E1009: Expecting ';' but found 'volatile'
+gdbstub.h(1380): Error! E1063: Missing operand
+gdbstub.h(1380): Warning! W111: Meaningless use of an expression
+gdbstub.h(1380): Error! E1009: Expecting ';' but found 'volatile'
+gdbstub.h(1380): Error! E1063: Missing operand
+gdbstub.h(1380): Warning! W111: Meaningless use of an expression
+gdbstub.h(1380): Error! E1009: Expecting ';' but found 'volatile'
+gdbstub.h(1380): Error! E1063: Missing operand
+gdbstub.h(1380): Warning! W111: Meaningless use of an expression
+gdbstub.h(1380): Error! E1009: Expecting ';' but found 'volatile'
+gdbstub.h(1380): Error! E1063: Missing operand
+gdbstub.h(1380): Warning! W111: Meaningless use of an expression
+gdbstub.h(1380): Error! E1009: Expecting ';' but found 'volatile'
+gdbstub.h(1380): Error! E1063: Missing operand
+gdbstub.h(1380): Warning! W111: Meaningless use of an expression
+gdbstub.h(1380): Error! E1009: Expecting ';' but found 'volatile'
+gdbstub.h(1380): Error! E1063: Missing operand
+gdbstub.h(1380): Warning! W111: Meaningless use of an expression
+gdbstub.h(1380): Error! E1147: Too many errors: compilation aborted

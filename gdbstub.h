@@ -22,6 +22,7 @@
 
 #ifndef GDBSTUB_H
 #define GDBSTUB_H
+/* #define DOSSTUB */
 
 /* Enable debug statements (printf) */
 #ifndef DEBUG
@@ -1310,6 +1311,7 @@ struct gdb_interrupt_state {
     uint32_t eflags;
 };
 
+#ifndef DOSSTUB
 struct gdb_idtr
 {
     uint16_t len;
@@ -1324,6 +1326,7 @@ struct gdb_idt_gate
     uint16_t offset_high;
 };
 #pragma pack()
+#endif
 
 /*****************************************************************************
  * Const Data
@@ -1337,11 +1340,17 @@ extern void const * const gdb_x86_int_handlers[];
 
 void gdb_x86_int_handler(struct gdb_interrupt_state *istate);
 
+#ifndef DOSSTUB
 static void gdb_x86_hook_idt(uint8_t vector, const void *function);
 static void gdb_x86_init_gates(void);
 static void gdb_x86_init_idt(void);
+
 static void gdb_x86_load_idt(struct gdb_idtr *idtr);
 static void gdb_x86_store_idt(struct gdb_idtr *idtr);
+#else
+extern void gdb_x86_hook_idt(uint32_t vector, const void *function);
+#endif
+
 static uint32_t gdb_x86_get_cs(void);
 static void gdb_x86_interrupt(struct gdb_interrupt_state *istate);
 static void gdb_x86_io_write_8(uint16_t port, uint8_t val);
@@ -1363,8 +1372,11 @@ static int gdb_x86_serial_putchar(int ch);
  * BSS Data
  ****************************************************************************/
 
+#ifndef DOSSTUB
 static struct gdb_idt_gate gdb_idt_gates[NUM_IDT_ENTRIES];
-static struct gdb_state    gdb_state;
+#endif
+static struct gdb_state gdb_state;
+
 
 /*****************************************************************************
  * Misc. Functions
@@ -1377,13 +1389,15 @@ static uint32_t gdb_x86_get_cs(void)
 {
     uint32_t cs;
 
+    /* clang-format off */
     asm volatile (
-        "push    %%cs;"
+        "pushl   %%cs;"
         "pop     %%eax;"
         /* Outputs  */ : "=a" (cs)
         /* Inputs   */ : /* None */
         /* Clobbers */ : /* None */
         );
+    /* clang-format on */
 
     return cs;
 }
@@ -1392,6 +1406,8 @@ static uint32_t gdb_x86_get_cs(void)
  * Interrupt Management Functions
  ****************************************************************************/
 
+
+#ifndef DOSSTUB
 /*
  * Initialize idt_gates with the interrupt handlers.
  */
@@ -1465,6 +1481,7 @@ static void gdb_x86_init_idt(void)
     idtr.offset = (uint32_t)gdb_idt_gates;
     gdb_x86_load_idt(&idtr);
 }
+#endif
 
 /*
  * Common interrupt handler routine.
@@ -1645,8 +1662,9 @@ int gdb_sys_step(struct gdb_state *state)
  */
 void gdb_sys_init(void)
 {
+    gdb_x86_serial_putchar('U');
     /* Hook current IDT. */
-    gdb_x86_hook_idt(1, gdb_x86_int_handlers[1]);
+    /* gdb_x86_hook_idt(1, gdb_x86_int_handlers[1]); */
     gdb_x86_hook_idt(3, gdb_x86_int_handlers[3]);
 
     /* Interrupt to start debugging. */

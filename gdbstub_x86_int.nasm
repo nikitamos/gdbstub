@@ -20,7 +20,7 @@
 ; SOFTWARE.
 ;
 
-bits 32
+bits 16
 
 %define NUM_HANDLERS 32
 
@@ -43,15 +43,17 @@ extern gdb_x86_int_handler
 
 %macro int 1
 gdb_x86_int_handler_%1:
-	push    0  ; Dummy Error code
-	push    %1 ; Interrupt Vector
+	push    dword 0  ; Dummy Error code
+	push    dword %1 ; Interrupt Vector
 	jmp     gdb_x86_int_handler_common
 %endmacro
 
 %macro inte 1
 gdb_x86_int_handler_%1:
 	; Error code already on stack
-	push    %1 ; Interrupt Vector
+	; Pad it with zeroes for real mode (just in case)
+	push    dword 0  ; One more dummy error code
+	push    dword %1 ; Interrupt Vector
 	jmp     gdb_x86_int_handler_common
 %endmacro
 
@@ -68,7 +70,7 @@ gdb_x86_int_handler_%1:
 
 ; Common Interrupt Handler
 gdb_x86_int_handler_common:
-	pushad
+	o32 pushad
 	push    ds
 	push    es
 	push    fs
@@ -105,6 +107,6 @@ gdb_x86_int_handler_common:
 	pop     fs
 	pop     es
 	pop     ds
-	popad
+	o32 popad
 	add     esp, 8 ; Pop error & vector
 	iret
