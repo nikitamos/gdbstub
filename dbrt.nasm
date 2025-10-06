@@ -14,11 +14,15 @@ extern	_gdb_sys_init
 section	code
 global	_init_dbrt0
 _init_dbrt0:
-	; Dirty hack to fix linker's inability to relocate data reads
+	; FIXME:
+	; Skill issue: the linker isn't configured to relocate data
+	; properly. It assumes that the data has offset of 0x0000,
+	; but that's not the case. This dirty hack manipulates the data
+	; segment to emulate the correct 0x0100 offset.
 	mov	ax, ds
 	mov	bx, 0x0010
 	add	ax, bx
-	; jc	segment_overflow ; TODO
+	jc	dsOverflow
 	mov	ds, ax
 
 	; We assume cs=ds=es=ss at the startup
@@ -64,6 +68,11 @@ _init_dbrt0:
 	pop	es
 	mov	ax, cs
 	mov	ds, ax
+	ret
+
+dsOverflow	mov	ah, 9	; WRITE STRING TO STDOUT
+	mov	dx, dsOverflowMsg
+	int	0x21
 	ret
 
 ; The caller pushes 16-bit handler address and 32-bit interrupt number on the stack.
@@ -112,6 +121,7 @@ putDebugChar16:
 
 section data
 oldIVT	times excnCnt dd 0
+dsOverflowMsg db "DBRT0 ERROR: faled to setup data segment pointer",0x10,13
 
 global _small_code_
 _small_code_	db	1
